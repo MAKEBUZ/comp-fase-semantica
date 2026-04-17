@@ -1,46 +1,48 @@
 grammar WhileLang;
 
 program: statement+ EOF;
+declaration: type ID ('=' expr)? SEMI;
+type: INT_TYPE | STRING_TYPE;
 
-statement: assignment | whileStatement | ifStatement | breakStatement | continueStatement;
+statement
+    : assignment | ifStatement | whileStatement
+    | declaration | breakStatement | continueStatement
+    ;
 
 assignment: ID ASSIGN expr SEMI;
 
-whileStatement: WHILE LPAREN condition RPAREN LBRACE statement* RBRACE;
+ifStatement
+    : IF LPAREN condition RPAREN LBRACE statement* RBRACE
+      (ELSE LBRACE statement* RBRACE)?
+    ;
 
-ifStatement: IF LPAREN condition RPAREN LBRACE statement* RBRACE (ELSE LBRACE statement* RBRACE)?;
+whileStatement
+    : WHILE LPAREN condition RPAREN LBRACE statement* RBRACE
+    ;
 
 breakStatement: BREAK SEMI;
-
 continueStatement: CONTINUE SEMI;
+condition: expr;
 
-condition: expr operator expr;
+expr
+    : ID                                       # idExpr
+    | NUMBER                                   # numberExpr
+    | STRING                                   # stringExpr
+    | expr (LT | GT | GE | LE | EQ | NE) expr  # comparisonExpr
+    | expr (PLUS | MINUS | MUL | DIV) expr     # arithmeticExpr
+    | LPAREN expr RPAREN                       # parenExpr
+    ;
 
-expr: ID | NUMBER | expr OP expr;
-
-operator: GT | LT | EQ |  NE;
-
-OP: MINUS | MULT | DIV;
-
-WHILE: 'while';
-IF: 'if';
-ELSE: 'else';
-BREAK: 'break';
-CONTINUE: 'continue';
-LPAREN: '(';
-RPAREN: ')';
-LBRACE: '{';
-RBRACE: '}';
-SEMI: ';';
-ASSIGN: '=';
-GT: '>';
-LT: '<';
-EQ: '==';
-NE: '!=';
-MINUS: '-';
-MULT: '*';
-DIV: '/';
-
+IF: 'if'; ELSE: 'else'; WHILE: 'while';
+BREAK: 'break'; CONTINUE: 'continue';
+INT_TYPE: 'int'; STRING_TYPE: 'string';
+LPAREN: '('; RPAREN: ')'; LBRACE: '{'; RBRACE: '}';
+SEMI: ';'; ASSIGN: '=';
+GE: '>='; LE: '<='; EQ: '=='; NE: '!=';
+LT: '<'; GT: '>';
+PLUS: '+'; MINUS: '-'; MUL: '*'; DIV: '/';
+STRING: '"' (~["\r\n])* '"';
 ID: [a-zA-Z_][a-zA-Z_0-9]*;
 NUMBER: [0-9]+;
+COMMENT: '//' ~[\r\n]* -> skip;
 WS: [ \t\r\n]+ -> skip;
